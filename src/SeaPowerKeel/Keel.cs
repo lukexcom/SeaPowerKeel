@@ -1891,8 +1891,8 @@ internal sealed partial class KeelHost : MonoBehaviour
         GUILayout.Label(new GUIContent(label, tooltip), nameStyle, GUILayout.Width(NameWidth));
         if (source != null)
             GUILayout.Label(source, sourceStyle, GUILayout.Width(SourceWidth));
-        if (showDll)
-            GUILayout.Label(Path.GetFileName(p.Dll), fileStyle, GUILayout.ExpandWidth(true));
+        if (showDll)    // the short checksum lets a player match the file with the release's list by eye; the full one is in Keel-report.txt
+            GUILayout.Label(Path.GetFileName(p.Dll) + (p.Sha256.Length > 0 ? "  ·  SHA-256 " + FileHash.Short(p.Sha256) : ""), fileStyle, GUILayout.ExpandWidth(true));
         GUILayout.EndHorizontal();
         if (!string.IsNullOrEmpty(p.Reason))
             GUILayout.Label(p.Reason, bodyStyle);

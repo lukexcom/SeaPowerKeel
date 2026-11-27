@@ -1,0 +1,3 @@
+# Line endings are part of the build: the compiler hashes every source file into the PDB, and the DLL carries that hash.
+# CRLF in every checkout (the developer PC, GitHub Actions, a player rebuilding a release), so the bytes come out the same.
+* text=auto eol=crlf

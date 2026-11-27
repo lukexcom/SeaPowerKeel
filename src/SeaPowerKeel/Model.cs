@@ -66,6 +66,11 @@ internal sealed class PluginEntry
 
     public string Display => string.IsNullOrEmpty(Name) ? Guid : Name;
 
+    private string sha256;
+    /// <summary>The DLL's SHA-256 as lowercase hex, read once when first asked: players compare it with the release's checksum list
+    /// to see that the file is the one that was published and scanned (roadmap 2026-11-26). Empty when the file cannot be read.</summary>
+    public string Sha256 => sha256 ??= FileHash.Sha256(Dll);
+
     public void Stop(PluginState state, string reason)
     {
         State = state;

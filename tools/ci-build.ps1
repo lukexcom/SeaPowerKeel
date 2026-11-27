@@ -9,29 +9,9 @@
 #>
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$unityVersion = '6000.0.84'
-
-$work = Join-Path $root 'obj\ci'
-if (Test-Path $work) { Remove-Item -Recurse -Force $work }
-New-Item -ItemType Directory -Force $work | Out-Null
-$ProgressPreference = 'SilentlyContinue'
-
-. (Join-Path $PSScriptRoot 'bepinex.ps1')
-$bepInEx = Get-OfficialBepInEx $root      # the official release, checked against its pinned hash
-
-$nupkg = Join-Path $work 'unity.zip'
-Invoke-WebRequest "https://nuget.bepinex.dev/v3/package/unityengine.modules/$unityVersion/unityengine.modules.$unityVersion.nupkg" -OutFile $nupkg
-$unity = Join-Path $work 'unity'
-Expand-Archive $nupkg $unity
-$managed = Join-Path $work 'managed'
-New-Item -ItemType Directory -Force $managed | Out-Null
-foreach ($name in 'UnityEngine.dll', 'UnityEngine.CoreModule.dll') {
-    $found = Get-ChildItem $unity -Recurse -Filter $name | Select-Object -First 1
-    if (-not $found) { throw "$name is not in UnityEngine.Modules $unityVersion" }
-    Copy-Item $found.FullName $managed
-}
-
-$refs = "-p:ManagedDir=$managed", "-p:BepInExCore=$bepInEx\BepInEx\core"
+. (Join-Path $PSScriptRoot 'refs.ps1')
+$public = Get-PublicRefs $root      # the official BepInEx release and Unity's reference assemblies, both pinned by hash
+$refs = "-p:ManagedDir=$($public.ManagedDir)", "-p:BepInExCore=$($public.BepInExCore)"
 dotnet build (Join-Path $root 'src\SeaPowerKeel.Stub\SeaPowerKeel.Stub.csproj') -c Release -p:Deploy=false @refs
 if ($LASTEXITCODE -ne 0) { throw 'Build failed: stub' }
 dotnet build (Join-Path $root 'src\SeaPowerKeel.Patcher\SeaPowerKeel.Patcher.csproj') -c Release @refs

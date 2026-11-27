@@ -40,6 +40,8 @@ internal static class Report
                           (ReportFormat.IsRunning(p.State) ? $", started in {p.StartMs:0} ms" : ""));
             if (!string.IsNullOrEmpty(p.Reason))
                 sb.AppendLine("    " + p.Reason);
+            if (p.Sha256.Length > 0)
+                sb.AppendLine("    SHA-256 " + p.Sha256);
             foreach (string w in p.Warnings)
                 sb.AppendLine("    warning: " + w);
             if (p.OtherMapBuildOf != null)

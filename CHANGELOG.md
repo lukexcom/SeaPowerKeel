@@ -5,6 +5,13 @@
 - **`BlockingStart=true`** (`_info.ini` `[Keel]`, or `AssemblyMetadata("Keel.BlockingStart", "true")` in the DLL; rgreat, PR #9): the mod starts right before the game's first load screen, and the game waits for it
   - why: a mod that replaces the load-screen pictures must run before the first one shows
   - implies `StartEarly`
+- **The report shows each DLL's SHA-256**: short in the report window, full in `Keel-report.txt`
+  - why: players can match a file with the checksum list of its release (`SHA256SUMS.txt`, GitHub release notes)
+- **Builds come out byte for byte the same**: deterministic build settings and a pinned .NET SDK (`global.json`)
+  - why: anyone can rebuild a release and compare the checksums
+- **GitHub checks every release by itself**: it rebuilds Keel from the release's source, compares every file with the zip, checks them on VirusTotal and writes the result into the release notes
+  - signed build proof per file: `gh attestation verify <file> --repo SEARATS/RatsSeaPowerKeel`
+  - Keel now compiles against the official BepInEx release and Unity's public reference files, pinned by hash, on every PC alike
 - **`StartEarly` mods start in the game's first frames**, one per frame, next to the game (they no longer hold it up)
 - **The early opt-in is seen in the DLL too**: Keel looks at the plugins of the mod list on disk before the game's first frame
   - the same scan serves the start when the game's list matches it, so no DLL is read twice

@@ -20,8 +20,14 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $root 'dist\SeaPowerKeel'
 
+# The public, hash-pinned references (tools\refs.ps1), never the game folder: GitHub Actions builds from the same files and
+# release-check.yml compares its build with this one byte for byte.
+. (Join-Path $PSScriptRoot 'refs.ps1')
+$refs = Get-PublicRefs $root
+$refArgs = "-p:ManagedDir=$($refs.ManagedDir)", "-p:BepInExCore=$($refs.BepInExCore)"
+
 foreach ($p in 'src\SeaPowerKeel\SeaPowerKeel.csproj', 'src\SeaPowerKeel.Stub\SeaPowerKeel.Stub.csproj', 'src\SeaPowerKeel.Patcher\SeaPowerKeel.Patcher.csproj', 'src\SeaPowerKeel.Watcher\SeaPowerKeel.Watcher.csproj') {
-    dotnet build (Join-Path $root $p) -c Release -p:Deploy=false -p:GameDir="$GameDir"
+    dotnet build (Join-Path $root $p) -c Release -p:Deploy=false @refArgs
     if ($LASTEXITCODE -ne 0) { throw "Build failed: $p" }
 }
 
@@ -35,9 +41,8 @@ Copy-Item (Join-Path $root 'src\SeaPowerKeel.Patcher\bin\Release\netstandard2.1\
 
 # KeelSetup.exe carries no other program inside: it copies the starter DLL and the patcher that lie next to it. BepInEx is not
 # shipped: the setup downloads the release pinned in tools\bepinex.ps1 and refuses any file with another hash.
-. (Join-Path $PSScriptRoot 'bepinex.ps1')
 Get-OfficialBepInExZip $root | Out-Null      # checks now that the pinned release is still downloadable and unchanged
-dotnet build (Join-Path $root 'src\SeaPowerKeel.Setup\SeaPowerKeel.Setup.csproj') -c Release -p:BepInExVersion="$BepInExVersion" -p:BepInExSha256="$BepInExSha256"
+dotnet build (Join-Path $root 'src\SeaPowerKeel.Setup\SeaPowerKeel.Setup.csproj') -c Release -p:BepInExVersion="$BepInExVersion" -p:BepInExSha256="$BepInExSha256" @refArgs
 if ($LASTEXITCODE -ne 0) { throw 'Build failed: KeelSetup' }
 Copy-Item (Join-Path $root 'src\SeaPowerKeel.Setup\bin\Release\net48\KeelSetup.exe') $dist
 Copy-Item (Join-Path $root 'src\SeaPowerKeel\mod\_info.ini') $dist

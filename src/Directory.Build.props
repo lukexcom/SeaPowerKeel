@@ -1,20 +1,37 @@
-<Project>
-  <!--Shared by the loader and the stub. Keel references no game assembly (only Unity, BepInEx and Mono.Cecil, which every
-      Sea Power build ships), so one build serves the flat map (0.8.7) and the 3D globe build alike.
-      Override the install: dotnet build -p:GameDir="D:\Steam\steamapps\common\Sea Power"-->
-  <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <Nullable>disable</Nullable>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <GameDir Condition="'$(GameDir)' == ''">E:\Games\steamapps\common\Sea Power</GameDir>
-    <ManagedDir Condition="'$(ManagedDir)' == ''">$(GameDir)\Sea Power_Data\Managed</ManagedDir>
-    <BepInExCore Condition="'$(BepInExCore)' == ''">$(GameDir)\BepInEx\core</BepInExCore>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="BepInEx"><HintPath>$(BepInExCore)\BepInEx.dll</HintPath><Private>false</Private></Reference>
-    <Reference Include="UnityEngine"><HintPath>$(ManagedDir)\UnityEngine.dll</HintPath><Private>false</Private></Reference>
-    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
-  </ItemGroup>
-</Project>
+<Project>
+  <!--Shared by the loader and the stub. Keel references no game assembly (only Unity, BepInEx and Mono.Cecil, which every
+      Sea Power build ships), so one build serves the flat map (0.8.7) and the 3D globe build alike.
+      Override the install: dotnet build -p:GameDir="D:\Steam\steamapps\common\Sea Power"-->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GameDir Condition="'$(GameDir)' == ''">E:\Games\steamapps\common\Sea Power</GameDir>
+    <ManagedDir Condition="'$(ManagedDir)' == ''">$(GameDir)\Sea Power_Data\Managed</ManagedDir>
+    <BepInExCore Condition="'$(BepInExCore)' == ''">$(GameDir)\BepInEx\core</BepInExCore>
+  </PropertyGroup>
+
+  <!--Same source, same SDK (global.json), same game and BepInEx files = the same bytes, so anyone can rebuild a release and
+      compare its SHA-256 with the published list. PathMap keeps the folder the repo sits in out of the DLL and its PDB.
+      Rigging's build\Rats.Reproducible.props holds the same lines for the mods (Keel builds without the Rigging repo).-->
+  <PropertyGroup>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))=/_/</PathMap>
+    <!--No git facts in the build: the SDK would write the remote's address and the commit into the PDB (SourceLink) and the
+        DLL's version text, so a clone with another remote or a fork would never match the release.-->
+    <EnableSourceLink>false</EnableSourceLink>
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+    <!--No debug file in a release build: the compiler writes the version of the .NET runtime it ran on into the PDB, and the
+        DLL carries the PDB's hash, so a PC or a GitHub runner with another .NET patch gave other bytes (found 2026-11-26).
+        Unity's Mono cannot read portable PDBs anyway, and no Keel package ever shipped one.-->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx"><HintPath>$(BepInExCore)\BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(ManagedDir)\UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>
